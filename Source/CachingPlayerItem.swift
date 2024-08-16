@@ -45,6 +45,12 @@ public final class CachingPlayerItem: AVPlayerItem {
     /// HTTPHeaderFields set in avUrlAssetOptions using AVURLAssetHTTPHeaderFieldsKey
     internal var urlRequestHeaders: [String: String]?
 
+    internal var isDownloadable: Bool {
+        guard self.initialScheme != nil else {
+            return false
+        }
+        return true
+    }
     /// Useful for keeping relevant model associated with CachingPlayerItem instance. This is a **strong** reference, be mindful not to create a **retain cycle**.
     public var passOnObject: Any?
     public weak var delegate: CachingPlayerItemDelegate?
