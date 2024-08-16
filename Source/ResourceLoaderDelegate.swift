@@ -7,7 +7,6 @@
 
 import Foundation
 import AVFoundation
-import UIKit
 
 /// Responsible for downloading media data and providing the requested data parts.
 final class ResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate {
@@ -24,7 +23,7 @@ final class ResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate, URL
     private let queue = DispatchQueue(label: "com.gcd.CachingPlayerItemQueue", qos: .userInitiated, attributes: .concurrent)
     private var pendingRequests: Set<AVAssetResourceLoadingRequest> {
         get { queue.sync { return pendingRequestsValue } }
-        set { queue.async(flags: .barrier) { [weak self] in self?.pendingRequestsValue = newValue } }
+        set { queue.sync { self.pendingRequestsValue = newValue } }
     }
     private var pendingRequestsValue = Set<AVAssetResourceLoadingRequest>()
     private var isDownloadComplete = false
@@ -72,7 +71,10 @@ final class ResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate, URL
         bufferData.append(data)
         writeBufferDataToFileIfNeeded()
         processPendingRequests()
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
             self.owner?.delegate?.playerItem?(self.owner!, didDownloadBytesSoFar: self.fileHandle.fileSize, outOf: Int(dataTask.countOfBytesExpectedToReceive))
         }
     }
@@ -190,7 +192,10 @@ final class ResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate, URL
 
         isDownloadComplete = true
 
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
             self.owner?.delegate?.playerItem?(self.owner!, didFinishDownloadingFileAt: self.saveFilePath)
         }
     }
@@ -216,7 +221,10 @@ final class ResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate, URL
     private func downloadFailed(with error: Error) {
         invalidateAndCancelSession()
 
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
             self.owner?.delegate?.playerItem?(self.owner!, downloadingFailedWith: error)
         }
     }
