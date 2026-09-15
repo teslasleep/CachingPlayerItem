@@ -45,7 +45,7 @@ public final class CachingPlayerItem: AVPlayerItem {
     /// HTTPHeaderFields set in avUrlAssetOptions using AVURLAssetHTTPHeaderFieldsKey
     internal var urlRequestHeaders: [String: String]?
 
-    internal var isDownloadable: Bool {
+    public var isDownloadable: Bool {
         guard self.initialScheme != nil else {
             return false
         }
